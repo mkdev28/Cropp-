@@ -1,5 +1,7 @@
 // TypeScript types for AgriRisk Pro
 
+
+
 export interface Farmer {
     id: string;
     kcc_id: string;

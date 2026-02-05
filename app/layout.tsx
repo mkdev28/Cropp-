@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AgriRisk Pro - Farm-Level Risk Intelligence",
-  description: "Fair Insurance Through Data. Every Farm Deserves Its Own Score. Precision risk assessment for Indian agriculture.",
+  title: "AgriRisk Pro | Precision Farm Intelligence",
+  description: "Fair Insurance Through Data. Farm-level risk assessment for the modern agricultural economy.",
 };
 
 export default function RootLayout({
@@ -23,9 +23,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background text-foreground`}
       >
         {children}
       </body>

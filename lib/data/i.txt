@@ -1,0 +1,5 @@
+Data Point	Mock Value	Real Value Impact
+NDVI (Vegetation health)		Actual crop health from satellite
+Soil Moisture	Random 30-80%	Real ground water levels
+Land Surface Temp	Random 25-40°C	Actual field temperature
+Precipitation	Random 0-50mm	Historical rainfall data

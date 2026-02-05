@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getKCCData, generateRandomKCC } from '@/lib/data/mock-kcc';
-import { getMockSatelliteData, getMockWeatherForecast } from '@/lib/data/mock-satellite';
+//import { getMockSatelliteData, getMockWeatherForecast } from '@/lib/data/mock-satellite';
+//import { getMockSatelliteData } from '@/lib/data/mock-satellite';
+import { getRealSatelliteData } from '@/lib/data/satellite-api';
+import { getRealWeatherForecast } from '@/lib/data/weather-api';
 import { calculateRiskScore, calculatePremium, generateRiskFactors, generateSuggestions } from '@/lib/ml/risk-calculator';
 import { detectFraud } from '@/lib/ml/fraud-detector';
 import { AssessmentRequest, AssessmentResponse } from '@/types';
@@ -42,10 +45,14 @@ export async function POST(req: NextRequest) {
         }
 
         // Fetch satellite data (mock)
-        const satelliteData = getMockSatelliteData(gps_latitude, gps_longitude);
+        //const satelliteData = getMockSatelliteData(gps_latitude, gps_longitude);
+        // Fetch weather forecast (mock)
+        //const weatherData = await getMockWeatherForecast(gps_latitude, gps_longitude);
+        // NEW:
+        const satelliteData = await getRealSatelliteData(gps_latitude, gps_longitude);
 
         // Fetch weather forecast (mock)
-        const weatherData = getMockWeatherForecast(gps_latitude, gps_longitude);
+        const weatherData = await getRealWeatherForecast(gps_latitude, gps_longitude);
 
         // Calculate water sources count
         const water_source_count = borewell_count + (has_canal_access ? 1 : 0);
