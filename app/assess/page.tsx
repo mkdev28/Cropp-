@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import {
     RiskScoreGauge,
     PremiumCard,
@@ -28,11 +28,10 @@ import {
     Phone,
     Tractor,
     Warehouse,
-    ChevronDown
 } from 'lucide-react';
 import { KCCData, AssessmentResponse } from '@/types';
-import Link from 'next/link';
 
+// --- CONSTANTS ---
 const STEPS = [
     { id: 1, title: 'KCC Verification', icon: CreditCard },
     { id: 2, title: 'Farm Location', icon: MapPin },
@@ -44,19 +43,37 @@ const STEPS = [
 const CROPS = ['Cotton', 'Soybean', 'Wheat', 'Rice', 'Sugarcane', 'Maize', 'Jowar', 'Bajra'];
 const IRRIGATION_TYPES = ['Drip', 'Sprinkler', 'Flood', 'Canal', 'Rainfed'];
 
+// --- TYPES ---
+// Update the form data interface to handle array for crop_types
+interface AssessFormData {
+    kcc_id: string;
+    gps_latitude: number;
+    gps_longitude: number;
+    crop_types: string[]; // <--- Changed from crop_type to crop_types (Array)
+    season: 'kharif' | 'rabi';
+    irrigation_type: string;
+    borewell_count: number;
+    borewell_depth_ft: number;
+    has_canal_access: boolean;
+    owns_tractor: boolean;
+    has_storage: boolean;
+    livestock_count: number;
+    sum_insured: number;
+}
+
 export default function AssessPage() {
     const [currentStep, setCurrentStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [kccData, setKccData] = useState<KCCData | null>(null);
     const [result, setResult] = useState<AssessmentResponse['data'] | null>(null);
 
-    // Form state
-    const [formData, setFormData] = useState({
+    // Form state initialized with crop_types as an empty array
+    const [formData, setFormData] = useState<AssessFormData>({
         kcc_id: '',
         gps_latitude: 18.5204,
         gps_longitude: 73.8567,
-        crop_type: '',
-        season: 'kharif' as 'kharif' | 'rabi',
+        crop_types: [], // <--- Initialized as empty array
+        season: 'kharif',
         irrigation_type: '',
         borewell_count: 0,
         borewell_depth_ft: 0,
@@ -98,6 +115,9 @@ export default function AssessPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ...formData,
+                    // Pass the first selected crop as primary if backend expects single string, 
+                    // or pass the whole array if backend is updated.
+                    crop_type: formData.crop_types[0] || 'Cotton', 
                     kcc_id: formData.kcc_id || 'MH-1234567890'
                 })
             });
@@ -128,13 +148,13 @@ export default function AssessPage() {
     const progress = (currentStep / STEPS.length) * 100;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
+        <div className="min-h-screen bg-background">
             {/* Header */}
             <header className="sticky top-0 z-50 glass border-b">
                 <div className="container mx-auto px-4 py-4 flex items-center justify-between">
                     <Link href="/" className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-lg gradient-primary flex items-center justify-center">
-                            <Leaf className="h-5 w-5 text-white" />
+                        <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+                            <Leaf className="h-5 w-5 text-primary-foreground" />
                         </div>
                         <span className="font-bold text-xl">AgriRisk Pro</span>
                     </Link>
@@ -146,9 +166,9 @@ export default function AssessPage() {
             </header>
 
             {/* Progress Bar */}
-            <div className="h-1 bg-gray-200">
+            <div className="h-1 bg-secondary">
                 <div
-                    className="h-full gradient-primary transition-all duration-500"
+                    className="h-full bg-primary transition-all duration-500"
                     style={{ width: `${progress}%` }}
                 />
             </div>
@@ -164,10 +184,10 @@ export default function AssessPage() {
                         return (
                             <div key={step.id} className="flex flex-col items-center gap-2">
                                 <div className={`
-                  h-10 w-10 rounded-full flex items-center justify-center transition-all
-                  ${isActive ? 'gradient-primary text-white shadow-lg scale-110' : ''}
-                  ${isComplete ? 'bg-green-500 text-white' : ''}
-                  ${!isActive && !isComplete ? 'bg-gray-200 text-gray-500' : ''}
+                  h-10 w-10 rounded-full flex items-center justify-center transition-all border
+                  ${isActive ? 'bg-primary text-primary-foreground shadow-lg scale-110 border-primary' : ''}
+                  ${isComplete ? 'bg-green-600 text-white border-green-600' : ''}
+                  ${!isActive && !isComplete ? 'bg-secondary text-muted-foreground border-border' : ''}
                 `}>
                                     {isComplete ? (
                                         <CheckCircle2 className="h-5 w-5" />
@@ -187,6 +207,7 @@ export default function AssessPage() {
             {/* Main Content */}
             <main className="container mx-auto px-4 pb-24">
                 <div className="max-w-2xl mx-auto">
+                    
                     {/* Step 1: KCC Verification */}
                     {currentStep === 1 && (
                         <Card className="shadow-lg">
@@ -214,8 +235,8 @@ export default function AssessPage() {
                                 </div>
 
                                 {kccData && (
-                                    <div className="rounded-lg border border-green-200 bg-green-50 p-4 space-y-3">
-                                        <div className="flex items-center gap-2 text-green-700">
+                                    <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-3">
+                                        <div className="flex items-center gap-2 text-primary">
                                             <CheckCircle2 className="h-5 w-5" />
                                             <span className="font-medium">KCC Card Verified!</span>
                                         </div>
@@ -260,11 +281,11 @@ export default function AssessPage() {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-green-200 to-green-400 opacity-30" />
+                                <div className="aspect-video bg-muted rounded-lg flex items-center justify-center relative overflow-hidden border">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-primary/5 opacity-50" />
                                     <div className="text-center z-10">
                                         <MapPin className="h-12 w-12 mx-auto text-primary mb-2" />
-                                        <p className="font-medium">Interactive Map</p>
+                                        <p className="font-medium">Interactive Map Placeholder</p>
                                         <p className="text-sm text-muted-foreground">
                                             {kccData?.village || 'Maharashtra'}, {kccData?.district || 'India'}
                                         </p>
@@ -310,30 +331,60 @@ export default function AssessPage() {
                         </Card>
                     )}
 
-                    {/* Step 3: Crop Details */}
+                    {/* Step 3: Crop Details (Multi-Select Enabled) */}
                     {currentStep === 3 && (
                         <Card className="shadow-lg">
                             <CardHeader className="text-center">
                                 <CardTitle className="text-2xl">Crop & Season</CardTitle>
                                 <CardDescription>
-                                    Select your crop and growing season
+                                    Select all crops you grow and the season
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 <div>
-                                    <label className="text-sm font-medium block mb-3">Select Crop</label>
-                                    <div className="grid grid-cols-4 gap-2">
-                                        {CROPS.map(crop => (
-                                            <Button
-                                                key={crop}
-                                                variant={formData.crop_type === crop ? 'default' : 'outline'}
-                                                className={formData.crop_type === crop ? 'gradient-primary' : ''}
-                                                onClick={() => setFormData(prev => ({ ...prev, crop_type: crop }))}
-                                            >
-                                                {crop}
-                                            </Button>
-                                        ))}
+                                    <label className="text-sm font-medium block mb-3">Select Crops (Multi-select)</label>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                        {CROPS.map(crop => {
+                                            // Check if this crop is currently in the array
+                                            const isSelected = formData.crop_types?.includes(crop);
+
+                                            return (
+                                                <Button
+                                                    key={crop}
+                                                    type="button"
+                                                    variant={isSelected ? 'default' : 'outline'}
+                                                    // Apply primary styling if selected, otherwise outline
+                                                    className={isSelected ? 'bg-primary text-primary-foreground hover:bg-primary/90' : ''}
+                                                    onClick={() => {
+                                                        setFormData(prev => {
+                                                            const currentCrops = prev.crop_types || [];
+                                                            
+                                                            if (currentCrops.includes(crop)) {
+                                                                // If found, remove it (Filter out)
+                                                                return {
+                                                                    ...prev,
+                                                                    crop_types: currentCrops.filter(c => c !== crop)
+                                                                };
+                                                            } else {
+                                                                // If not found, add it
+                                                                return {
+                                                                    ...prev,
+                                                                    crop_types: [...currentCrops, crop]
+                                                                };
+                                                            }
+                                                        });
+                                                    }}
+                                                >
+                                                    {crop}
+                                                </Button>
+                                            );
+                                        })}
                                     </div>
+                                    <p className="text-xs text-muted-foreground mt-2">
+                                        {formData.crop_types?.length > 0
+                                            ? `${formData.crop_types.length} crops selected` 
+                                            : "Select at least one crop"}
+                                    </p>
                                 </div>
 
                                 <div>
@@ -341,7 +392,7 @@ export default function AssessPage() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <Button
                                             variant={formData.season === 'kharif' ? 'default' : 'outline'}
-                                            className={`h-20 ${formData.season === 'kharif' ? 'gradient-primary' : ''}`}
+                                            className={`h-20 ${formData.season === 'kharif' ? 'bg-primary text-primary-foreground' : ''}`}
                                             onClick={() => setFormData(prev => ({ ...prev, season: 'kharif' }))}
                                         >
                                             <div className="text-center">
@@ -351,7 +402,7 @@ export default function AssessPage() {
                                         </Button>
                                         <Button
                                             variant={formData.season === 'rabi' ? 'default' : 'outline'}
-                                            className={`h-20 ${formData.season === 'rabi' ? 'gradient-primary' : ''}`}
+                                            className={`h-20 ${formData.season === 'rabi' ? 'bg-primary text-primary-foreground' : ''}`}
                                             onClick={() => setFormData(prev => ({ ...prev, season: 'rabi' }))}
                                         >
                                             <div className="text-center">
@@ -367,7 +418,7 @@ export default function AssessPage() {
                                     <Input
                                         type="number"
                                         value={formData.sum_insured}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, sum_insured: parseInt(e.target.value) }))}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, sum_insured: parseInt(e.target.value) || 0 }))}
                                     />
                                 </div>
                             </CardContent>
@@ -391,7 +442,7 @@ export default function AssessPage() {
                                             <Button
                                                 key={type}
                                                 variant={formData.irrigation_type === type.toLowerCase() ? 'default' : 'outline'}
-                                                className={formData.irrigation_type === type.toLowerCase() ? 'gradient-primary' : ''}
+                                                className={formData.irrigation_type === type.toLowerCase() ? 'bg-primary text-primary-foreground' : ''}
                                                 onClick={() => setFormData(prev => ({ ...prev, irrigation_type: type.toLowerCase() }))}
                                             >
                                                 <Droplets className="h-4 w-4 mr-1" />
@@ -427,7 +478,7 @@ export default function AssessPage() {
                                     <div className="grid grid-cols-2 gap-2">
                                         <Button
                                             variant={formData.owns_tractor ? 'default' : 'outline'}
-                                            className={formData.owns_tractor ? 'gradient-primary' : ''}
+                                            className={formData.owns_tractor ? 'bg-primary text-primary-foreground' : ''}
                                             onClick={() => setFormData(prev => ({ ...prev, owns_tractor: !prev.owns_tractor }))}
                                         >
                                             <Tractor className="h-4 w-4 mr-2" />
@@ -435,7 +486,7 @@ export default function AssessPage() {
                                         </Button>
                                         <Button
                                             variant={formData.has_storage ? 'default' : 'outline'}
-                                            className={formData.has_storage ? 'gradient-primary' : ''}
+                                            className={formData.has_storage ? 'bg-primary text-primary-foreground' : ''}
                                             onClick={() => setFormData(prev => ({ ...prev, has_storage: !prev.has_storage }))}
                                         >
                                             <Warehouse className="h-4 w-4 mr-2" />
@@ -488,7 +539,7 @@ export default function AssessPage() {
                             />
 
                             <div className="flex gap-4">
-                                <Button className="flex-1 gradient-primary text-white h-12">
+                                <Button className="flex-1 bg-primary text-primary-foreground h-12 shadow-lg">
                                     <Send className="h-4 w-4 mr-2" />
                                     Apply for Insurance
                                 </Button>
@@ -509,7 +560,7 @@ export default function AssessPage() {
 
             {/* Navigation Footer */}
             {currentStep < 5 && (
-                <div className="fixed bottom-0 left-0 right-0 glass border-t p-4">
+                <div className="fixed bottom-0 left-0 right-0 glass border-t p-4 z-40">
                     <div className="container mx-auto max-w-2xl flex gap-4">
                         <Button
                             variant="outline"
@@ -522,8 +573,12 @@ export default function AssessPage() {
                         </Button>
                         <Button
                             onClick={nextStep}
-                            disabled={isLoading || (currentStep === 1 && !kccData) || (currentStep === 3 && !formData.crop_type)}
-                            className="flex-1 gradient-primary text-white"
+                            disabled={
+                                isLoading || 
+                                (currentStep === 1 && !kccData) || 
+                                (currentStep === 3 && formData.crop_types.length === 0) // Disabled if 0 crops selected
+                            }
+                            className="flex-1 bg-primary text-primary-foreground"
                         >
                             {isLoading ? (
                                 <Loader2 className="h-4 w-4 animate-spin" />
