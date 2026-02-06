@@ -26,8 +26,9 @@ import {
     IndianRupee,
     Loader2
 } from 'lucide-react';
-import { FraudFlag, KCCData, AssessmentResponse } from '@/types';
+import { FraudFlag, KCCData, AssessmentResponse, FraudCase } from '@/types';
 import { allMockFarmers } from '@/lib/data/mock-kcc';
+import LiveRiskMap from '@/components/maps/LiveRiskMap';
 
 // Mock portfolio data
 const portfolioMetrics = {
@@ -40,69 +41,25 @@ const portfolioMetrics = {
     high_risk_count: 8022
 };
 
-// Mock fraud cases
-const mockFraudCases = [
-    {
-        id: '1',
-        kcc_id: 'MH-12456789',
-        farmer_name: 'Suspicious Farmer 1',
-        phone: '+919876543210',
-        severity: 'high' as const,
-        fraud_score: 75,
-        assessment_date: '2026-02-04',
-        flags: [
-            {
-                type: 'land_mismatch',
-                severity: 'high' as const,
-                details: 'Claimed 10 acres but KCC records show 3.2 acres',
-                evidence: { claimed: 10, verified: 3.2, discrepancy: '212% inflation' },
-                confidence: 95
-            }
-        ]
-    },
-    {
-        id: '2',
-        kcc_id: 'MH-78901234',
-        farmer_name: 'Suspicious Farmer 2',
-        phone: '+919123456789',
-        severity: 'medium' as const,
-        fraud_score: 45,
-        assessment_date: '2026-02-04',
-        flags: [
-            {
-                type: 'irrigation_mismatch',
-                severity: 'medium' as const,
-                details: 'Claimed drip irrigation but satellite shows irregular patterns',
-                evidence: { claimed: 'Drip irrigation', verified: '52% uniformity', discrepancy: 'Expected >60%' },
-                confidence: 75
-            }
-        ]
-    }
-];
-
-// Mock alerts
-const mockAlerts = [
-    {
-        id: '1',
-        type: 'drought_risk',
-        severity: 'critical',
-        title: 'Drought Risk - Vidarbha Region',
-        message: '3,245 cotton farms at risk. Projected claims: ₹28 Cr. Rainfall deficit: 35% below normal.',
-        affectedFarms: 3245,
-        projectedClaims: 280000000
-    },
-    {
-        id: '2',
-        type: 'heatwave_risk',
-        severity: 'high',
-        title: 'Heatwave Alert - Marathwada',
-        message: 'Extreme heat expected for 5 days. 1,892 farms may need irrigation support.',
-        affectedFarms: 1892,
-        projectedClaims: 45000000
-    }
-];
-
 export default function InsuranceDashboard() {
+    const [realFraudCases, setRealFraudCases] = useState<FraudCase[]>([]);
+
+    useEffect(() => {
+        const fetchFraudCases = async () => {
+            try {
+                const response = await fetch('/api/dashboard/fraud');
+                const data = await response.json();
+                if (data.success) {
+                    setRealFraudCases(data.data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch fraud cases:', error);
+            }
+        };
+
+        fetchFraudCases();
+    }, []);
+
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [searchResult, setSearchResult] = useState<AssessmentResponse['data'] | null>(null);
@@ -135,6 +92,15 @@ export default function InsuranceDashboard() {
             setIsSearching(false);
         }
     };
+
+    const markers = allMockFarmers.map(f => ({
+        id: f.kcc_id,
+        lat: f.approximate_location.lat,
+        lng: f.approximate_location.lng,
+        farmer: f.farmer_name,
+        risk: f.risk_level || 'medium'
+    }));
+
 
     const formatCurrency = (amount: number) => {
         if (amount >= 10000000) {
@@ -234,32 +200,8 @@ export default function InsuranceDashboard() {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="aspect-[2/1] bg-gradient-to-br from-green-100 via-yellow-50 to-red-50 rounded-lg relative overflow-hidden">
-                                    {/* Mock map with farm markers */}
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="text-center">
-                                            <MapPin className="h-12 w-12 mx-auto text-primary/50 mb-2" />
-                                            <p className="text-muted-foreground">Interactive Map</p>
-                                            <p className="text-sm text-muted-foreground">Maharashtra Region</p>
-                                        </div>
-                                    </div>
+                                <LiveRiskMap markers={markers} />
 
-                                    {/* Mock markers */}
-                                    {[
-                                        { x: '20%', y: '30%', color: 'bg-green-500' },
-                                        { x: '35%', y: '45%', color: 'bg-green-500' },
-                                        { x: '55%', y: '35%', color: 'bg-yellow-500' },
-                                        { x: '70%', y: '55%', color: 'bg-red-500' },
-                                        { x: '45%', y: '65%', color: 'bg-green-500' },
-                                        { x: '80%', y: '40%', color: 'bg-yellow-500' },
-                                    ].map((marker, i) => (
-                                        <div
-                                            key={i}
-                                            className={`absolute w-3 h-3 ${marker.color} rounded-full animate-pulse`}
-                                            style={{ left: marker.x, top: marker.y }}
-                                        />
-                                    ))}
-                                </div>
 
                                 {/* Legend */}
                                 <div className="flex items-center justify-center gap-8 mt-4">
@@ -372,36 +314,13 @@ export default function InsuranceDashboard() {
                                         <AlertTriangle className="h-5 w-5 text-red-500" />
                                         Active Alerts
                                     </div>
-                                    <Badge variant="destructive">{mockAlerts.length}</Badge>
+                                    <Badge variant="destructive">0</Badge>
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {mockAlerts.map(alert => (
-                                    <div
-                                        key={alert.id}
-                                        className={`p-4 rounded-lg border ${alert.severity === 'critical'
-                                                ? 'border-red-200 bg-red-50'
-                                                : 'border-yellow-200 bg-yellow-50'
-                                            }`}
-                                    >
-                                        <div className="flex items-start justify-between mb-2">
-                                            <h4 className={`font-medium text-sm ${alert.severity === 'critical' ? 'text-red-700' : 'text-yellow-700'
-                                                }`}>
-                                                {alert.title}
-                                            </h4>
-                                            <Badge variant={alert.severity === 'critical' ? 'destructive' : 'secondary'}>
-                                                {alert.severity}
-                                            </Badge>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground mb-3">
-                                            {alert.message}
-                                        </p>
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span>{alert.affectedFarms.toLocaleString()} farms</span>
-                                            <span className="font-medium">{formatCurrency(alert.projectedClaims)}</span>
-                                        </div>
-                                    </div>
-                                ))}
+                                <div className="text-center text-muted-foreground text-sm py-4">
+                                    No active alerts at this time.
+                                </div>
 
                                 <Button variant="outline" className="w-full">
                                     View All Alerts
@@ -418,45 +337,51 @@ export default function InsuranceDashboard() {
                                         <Shield className="h-5 w-5 text-primary" />
                                         Fraud Detection
                                     </div>
-                                    <Badge variant="secondary">{mockFraudCases.length} flags</Badge>
+                                    <Badge variant="secondary">{realFraudCases.length} flags</Badge>
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                {mockFraudCases.map(fraudCase => (
-                                    <div
-                                        key={fraudCase.id}
-                                        className={`p-4 rounded-lg border ${fraudCase.severity === 'high'
+                                {realFraudCases.length === 0 ? (
+                                    <div className="text-center text-muted-foreground text-sm py-4">
+                                        No fraud cases detected.
+                                    </div>
+                                ) : (
+                                    realFraudCases.map(fraudCase => (
+                                        <div
+                                            key={fraudCase.id}
+                                            className={`p-4 rounded-lg border ${fraudCase.severity === 'high' || fraudCase.severity === 'critical'
                                                 ? 'border-red-200 bg-red-50'
                                                 : 'border-yellow-200 bg-yellow-50'
-                                            }`}
-                                    >
-                                        <div className="flex items-start justify-between mb-2">
-                                            <div>
-                                                <h4 className="font-medium text-sm">{fraudCase.farmer_name}</h4>
-                                                <p className="text-xs text-muted-foreground">{fraudCase.kcc_id}</p>
+                                                }`}
+                                        >
+                                            <div className="flex items-start justify-between mb-2">
+                                                <div>
+                                                    <h4 className="font-medium text-sm">{fraudCase.farmer_name}</h4>
+                                                    <p className="text-xs text-muted-foreground">{fraudCase.kcc_id}</p>
+                                                </div>
+                                                <Badge variant={fraudCase.severity === 'high' || fraudCase.severity === 'critical' ? 'destructive' : 'secondary'}>
+                                                    {fraudCase.fraud_score}% risk
+                                                </Badge>
                                             </div>
-                                            <Badge variant={fraudCase.severity === 'high' ? 'destructive' : 'secondary'}>
-                                                {fraudCase.fraud_score}% risk
-                                            </Badge>
-                                        </div>
 
-                                        {fraudCase.flags.map((flag, idx) => (
-                                            <div key={idx} className="text-xs text-muted-foreground mb-2">
-                                                <AlertTriangle className="h-3 w-3 inline mr-1" />
-                                                {flag.details}
+                                            {fraudCase.flags.map((flag, idx) => (
+                                                <div key={idx} className="text-xs text-muted-foreground mb-2">
+                                                    <AlertTriangle className="h-3 w-3 inline mr-1" />
+                                                    {flag.details}
+                                                </div>
+                                            ))}
+
+                                            <div className="flex gap-2 mt-3">
+                                                <Button size="sm" variant="destructive" className="flex-1 h-8 text-xs">
+                                                    Reject
+                                                </Button>
+                                                <Button size="sm" variant="outline" className="flex-1 h-8 text-xs">
+                                                    Verify
+                                                </Button>
                                             </div>
-                                        ))}
-
-                                        <div className="flex gap-2 mt-3">
-                                            <Button size="sm" variant="destructive" className="flex-1 h-8 text-xs">
-                                                Reject
-                                            </Button>
-                                            <Button size="sm" variant="outline" className="flex-1 h-8 text-xs">
-                                                Verify
-                                            </Button>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))
+                                )}
 
                                 <Link href="/dashboard/fraud">
                                     <Button variant="outline" className="w-full">
@@ -472,5 +397,3 @@ export default function InsuranceDashboard() {
         </div>
     );
 }
-
-

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getKCCData, generateRandomKCC } from '@/lib/data/mock-kcc';
+import { getKCCData } from '@/lib/data/mock-kcc';
 
 export async function GET(
     req: NextRequest,
@@ -18,10 +18,6 @@ export async function GET(
         // Try to get from mock database
         let kccData = getKCCData(kcc_id);
 
-        // If not found, generate random data for demo
-        if (!kccData) {
-            kccData = generateRandomKCC(kcc_id);
-        }
 
         return NextResponse.json({
             success: true,

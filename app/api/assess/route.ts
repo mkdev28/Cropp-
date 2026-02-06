@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getKCCData, generateRandomKCC } from '@/lib/data/mock-kcc';
+import { getKCCData } from '@/lib/data/mock-kcc';
 //import { getMockSatelliteData, getMockWeatherForecast } from '@/lib/data/mock-satellite';
 //import { getMockSatelliteData } from '@/lib/data/mock-satellite';
 import { getRealSatelliteData } from '@/lib/data/satellite-api';
@@ -39,10 +39,14 @@ export async function POST(req: NextRequest) {
 
         // Fetch KCC data (mock)
         let kccData = getKCCData(kcc_id);
+
         if (!kccData) {
-            // Generate random data for unknown KCC IDs (demo purposes)
-            kccData = generateRandomKCC(kcc_id);
+            return NextResponse.json(
+                { success: false, error: 'KCC ID not found' },
+                { status: 404 }
+            );
         }
+
 
         // Fetch satellite data (mock)
         //const satelliteData = getMockSatelliteData(gps_latitude, gps_longitude);
@@ -117,6 +121,23 @@ export async function POST(req: NextRequest) {
         );
 
         const processingTime = Date.now() - startTime;
+
+        // Save fraud case if flags exist
+        if (fraudCheck.flags.length > 0) {
+            // Dynamically import to avoid circular dependencies if any, though likely safe to import at top
+            const { saveFraudCase } = require('@/lib/fraud-service');
+
+            saveFraudCase({
+                id: `fraud_${Date.now()}`,
+                kcc_id,
+                farmer_name: kccData.farmer_name,
+                phone: kccData.phone,
+                severity: fraudCheck.recommendation === 'reject' ? 'critical' : fraudCheck.recommendation === 'field_verify' ? 'high' : 'medium',
+                flags: fraudCheck.flags,
+                assessment_date: new Date().toISOString().split('T')[0],
+                fraud_score: fraudCheck.fraud_score
+            });
+        }
 
         const response: AssessmentResponse = {
             success: true,

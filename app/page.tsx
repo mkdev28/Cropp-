@@ -100,7 +100,7 @@ export default function HomePage() {
             </div>
 
             {/* Trust Indicators */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 border-t border-border/50 pt-10 max-w-3xl mx-auto">
+            {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6 border-t border-border/50 pt-10 max-w-3xl mx-auto">
               {[
                 { label: '5+ Data Sources', desc: 'Satellite to Soil' },
                 { label: 'Real-time Analysis', desc: 'Instant Risk Scoring' },
@@ -114,7 +114,7 @@ export default function HomePage() {
                   <span className="text-sm text-muted-foreground">{stat.desc}</span>
                 </div>
               ))}
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
@@ -246,28 +246,28 @@ export default function HomePage() {
               </Button>
             </div>
 
-            <div className="md:w-2/3 grid sm:grid-cols-2 gap-8">
+            <div className="md:w-2/3 grid gap-8">
               {[
                 {
                   icon: Shield,
                   title: 'Fraud Detection',
                   desc: 'AI flags land inflation and fake irrigation claims instantly.'
                 },
-                {
-                  icon: Users,
-                  title: 'Trust System',
-                  desc: 'Farmers build a credit-like "Trust Score" over time.'
-                },
+                // {
+                //   icon: Users,
+                //   title: 'Trust System',
+                //   desc: 'Farmers build a credit-like "Trust Score" over time.'
+                // },
                 {
                   icon: Cloud,
                   title: 'Proactive Alerts',
                   desc: 'SMS warnings for drought and pests before damage occurs.'
-                },
-                {
-                  icon: IndianRupee,
-                  title: 'Fast Settlement',
-                  desc: 'Parametric triggers mean payouts happen in days, not months.'
                 }
+                // {
+                //   icon: IndianRupee,
+                //   title: 'Fast Settlement',
+                //   desc: 'Parametric triggers mean payouts happen in days, not months.'
+                // }
               ].map((feature, i) => (
                 <div key={i} className="p-6 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
                   <feature.icon className="h-8 w-8 text-primary mb-4" />

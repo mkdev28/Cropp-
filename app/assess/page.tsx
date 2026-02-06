@@ -117,8 +117,8 @@ export default function AssessPage() {
                     ...formData,
                     // Pass the first selected crop as primary if backend expects single string, 
                     // or pass the whole array if backend is updated.
-                    crop_type: formData.crop_types[0] || 'Cotton', 
-                    kcc_id: formData.kcc_id || 'MH-1234567890'
+                    crop_type: formData.crop_types[0],
+                    kcc_id: formData.kcc_id ? formData.kcc_id : alert("Invalid KCC ID.")
                 })
             });
 
@@ -132,6 +132,33 @@ export default function AssessPage() {
             console.error('Assessment failed:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+    const handleDownloadReport = async () => {
+        if (!result) return;
+
+        try {
+            const response = await fetch('/api/download-report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(result),
+            });
+
+            if (!response.ok) throw new Error('Failed to generate report');
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `AgriRisk-Report-${result.farmer_name.replace(/\s+/g, '_')}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error('Error downloading report:', error);
         }
     };
 
@@ -207,7 +234,7 @@ export default function AssessPage() {
             {/* Main Content */}
             <main className="container mx-auto px-4 pb-24">
                 <div className="max-w-2xl mx-auto">
-                    
+
                     {/* Step 1: KCC Verification */}
                     {currentStep === 1 && (
                         <Card className="shadow-lg">
@@ -358,7 +385,7 @@ export default function AssessPage() {
                                                     onClick={() => {
                                                         setFormData(prev => {
                                                             const currentCrops = prev.crop_types || [];
-                                                            
+
                                                             if (currentCrops.includes(crop)) {
                                                                 // If found, remove it (Filter out)
                                                                 return {
@@ -382,7 +409,7 @@ export default function AssessPage() {
                                     </div>
                                     <p className="text-xs text-muted-foreground mt-2">
                                         {formData.crop_types?.length > 0
-                                            ? `${formData.crop_types.length} crops selected` 
+                                            ? `${formData.crop_types.length} crops selected`
                                             : "Select at least one crop"}
                                     </p>
                                 </div>
@@ -539,11 +566,16 @@ export default function AssessPage() {
                             />
 
                             <div className="flex gap-4">
-                                <Button className="flex-1 bg-primary text-primary-foreground h-12 shadow-lg">
+                                <Button className="flex-1 bg-primary text-primary-foreground h-12 shadow-lg"
+                                    onClick={() => window.open("https://pmfby.gov.in/", "_blank", "noopener,noreferrer")}>
                                     <Send className="h-4 w-4 mr-2" />
                                     Apply for Insurance
                                 </Button>
-                                <Button variant="outline" className="h-12">
+                                <Button
+                                    variant="outline"
+                                    className="h-12"
+                                    onClick={handleDownloadReport}
+                                >
                                     <Download className="h-4 w-4 mr-2" />
                                     Download Report
                                 </Button>
@@ -574,8 +606,8 @@ export default function AssessPage() {
                         <Button
                             onClick={nextStep}
                             disabled={
-                                isLoading || 
-                                (currentStep === 1 && !kccData) || 
+                                isLoading ||
+                                (currentStep === 1 && !kccData) ||
                                 (currentStep === 3 && formData.crop_types.length === 0) // Disabled if 0 crops selected
                             }
                             className="flex-1 bg-primary text-primary-foreground"

@@ -112,42 +112,4 @@ export function searchKCCByPhone(phone: string): KCCData | null {
     ) || null;
 }
 
-// Generate random KCC for demo purposes
-export function generateRandomKCC(kcc_id: string): KCCData {
-    const firstNames = ['Ramesh', 'Suresh', 'Vikram', 'Ajay', 'Rajesh', 'Prakash', 'Manoj', 'Anil'];
-    const lastNames = ['Patil', 'Jadhav', 'Deshmukh', 'Gaikwad', 'Shinde', 'Kulkarni', 'More', 'Pawar'];
-    const villages = ['Shirur', 'Baramati', 'Daund', 'Indapur', 'Junnar', 'Maval', 'Mulshi'];
-    const districts = ['Pune', 'Nashik', 'Ahmednagar', 'Satara', 'Kolhapur', 'Amravati', 'Yavatmal'];
-    const crops = ['Cotton', 'Soybean', 'Wheat', 'Rice', 'Sugarcane', 'Maize', 'Jowar'];
-
-    const randomName = `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
-    const randomVillage = villages[Math.floor(Math.random() * villages.length)];
-    const randomDistrict = districts[Math.floor(Math.random() * districts.length)];
-    const numCrops = Math.floor(Math.random() * 3) + 1;
-    const randomCrops = [...crops].sort(() => 0.5 - Math.random()).slice(0, numCrops);
-
-    return {
-        kcc_id,
-        farmer_name: randomName,
-        phone: `+91${Math.floor(Math.random() * 9000000000) + 1000000000}`,
-        land_acres: Math.round((Math.random() * 15 + 1) * 10) / 10,
-        registered_crops: randomCrops,
-        kcc_issue_date: '2022-01-15',
-        kcc_expiry_date: '2027-01-14',
-        total_loans_taken: Math.floor(Math.random() * 5) + 1,
-        loans_repaid_ontime: Math.floor(Math.random() * 5),
-        repayment_rate_percent: Math.floor(Math.random() * 40) + 60,
-        outstanding_amount: Math.floor(Math.random() * 200000),
-        receives_pm_kisan: Math.random() > 0.3,
-        last_subsidy_date: '2024-11-01',
-        village: randomVillage,
-        district: randomDistrict,
-        state: 'Maharashtra',
-        approximate_location: {
-            lat: 18.5 + (Math.random() - 0.5) * 4,
-            lng: 74 + (Math.random() - 0.5) * 6
-        }
-    };
-}
-
 export const allMockFarmers = Object.values(MOCK_KCC_DATABASE);

@@ -1,0 +1,24 @@
+[
+  {
+    "id": "fraud_1770336992878",
+    "kcc_id": "mh-1234567890",
+    "farmer_name": "Ramesh Patil",
+    "phone": "+919876543210",
+    "severity": "medium",
+    "flags": [
+      {
+        "type": "crop_mismatch",
+        "severity": "medium",
+        "details": "Declared Cotton but vegetation index too low for healthy crop",
+        "evidence": {
+          "claimed": "Cotton",
+          "verified": "NDVI: 0.10",
+          "discrepancy": "Expected >=0.45 for healthy Cotton"
+        },
+        "confidence": 65
+      }
+    ],
+    "assessment_date": "2026-02-06",
+    "fraud_score": 16
+  }
+]
